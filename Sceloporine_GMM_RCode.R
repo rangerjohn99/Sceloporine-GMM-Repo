@@ -13,10 +13,10 @@ f2 <- curl("https://raw.githubusercontent.com/rangerjohn99/Sceloporine-GMM-Repo/
 specimenList <- read.csv(f2, header = FALSE, sep = ",", stringsAsFactors = TRUE) # this is a matrix of each specimen  
 head(specimenList)
 names(specimenList)[2] <- "Specimen"
-specimen <- gsub("\\\\", "", specimenList$Specimen)
+specimen <- gsub("\\\\", "", specimenList$Specimen) # backslashes are terrible to work with
 specimen <- gsub("'C:UsersKempLabBoxKemp LabGeometric Morphometrics ProjectProcessed ImagesMaxillaMaxilla Lateral", "", specimen)
 library(dplyr)
-genus <-gsub("_.*","",specimen) #make a separate genus vector
-speciesV1 <-gsub("_M-.*","",specimen) #make a separate species vector part 1
-species <-gsub("_CJB.*","",speciesV1) #make a separate species vector part 2
+genus <-gsub("_.*","",specimen) # make a separate genus vector
+speciesV1 <-gsub("_M-.*","",specimen) # make a separate species vector part 1
+species <-gsub("_CJB.*","",speciesV1) # make a separate species vector part 2
 
