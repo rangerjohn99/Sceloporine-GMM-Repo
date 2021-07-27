@@ -59,6 +59,60 @@ p
 
 
 
+## Discriminant Function Analysis ##
+
+library(Morpho)
+
+DFA<-CVA(GMM_data_sub$land, GMM_data_sub$species, cv = FALSE) # performs CVA (canonical variation analysis) aka Discriminant function analysis
+
+barplot(DFA$Var[,2]) # Variance explained by the canonical roots
+
+# Plot first two DF axes #
+
+DFA_cva <- data.frame(DFA$CVscores, species = DFA$groups)
+
+ggplot(DFA_cva, aes(CV.1, CV.2)) +
+  geom_point(aes(color = species)) + theme_classic()
+
+#alternative plot
+plot(DFA$CVscores, col=GMM_data_sub$species, pch=as.numeric(GMM_data_sub$species), typ="n",asp=1,
+     xlab=paste("1st canonical axis", paste(round(DFA$Var[1,2],1),"%")),
+     ylab=paste("2nd canonical axis", paste(round(DFA$Var[2,2],1),"%")))
+text(DFA$CVscores, as.character(GMM_data_sub$species), col=as.numeric(GMM_data_sub$species), cex=.7)
+
+# Plot Mahalahobis distances as dendrogram #
+
+dendroS=hclust(DFA$Dist$GroupdistMaha)
+dendroS$labels=levels(GMM_data_sub$species)
+par(mar=c(6.5,4.5,1,1))
+dendroS=as.dendrogram(dendroS)
+plot(dendroS, main='',sub='', xlab="",
+     ylab='Mahalahobis distance')
+
+
+
+
+#+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
+
+
+
+
+
+## Missing landmarks dataset ##
+
+
+
+#same thing as above
+
+#+ estimate location of missing landmarks (David will get more code for this)
+
+#+ predict group assignment based on DFA
+
+
+
+
+
+
 
 
 
