@@ -31,7 +31,7 @@ plot(GPA_landmarks)
 ## CREATE GMM DATAFRAMES
 
 GMM_data <-geomorph.data.frame(coords=GPA_landmarks$coords,
-                                        size=GPA_landmarks$Csize, species=species, genus=genus, specimen = specimen)
+                               size=GPA_landmarks$Csize, species=species, genus=genus, specimen = specimen)
 
 
 ## PRINCIPAL COMPONENT ANALYSIS ##
@@ -57,44 +57,44 @@ p<-ggplot(PC_scores,aes(x=PC1,y=PC2,color=genus)) +
   theme_classic()
 p
 
-
-
 ## Discriminant Function Analysis ##
 
 library(Morpho)
 
-DFA<-CVA(GMM_data_sub$land, GMM_data_sub$species, cv = FALSE) # performs CVA (canonical variation analysis) aka Discriminant function analysis
+DFA<-CVA(GMM_data$coords, GMM_data$genus, cv = FALSE) # performs CVA (canonical variation analysis) aka Discriminant function analysis
 
 barplot(DFA$Var[,2]) # Variance explained by the canonical roots
 
 # Plot first two DF axes #
 
-DFA_cva <- data.frame(DFA$CVscores, species = DFA$groups)
+DFA_cva <- data.frame(DFA$CVscores, genus = DFA$groups)
 
 ggplot(DFA_cva, aes(CV.1, CV.2)) +
-  geom_point(aes(color = species)) + theme_classic()
+  geom_point(aes(color = genus)) + theme_classic()
 
-#alternative plot
-plot(DFA$CVscores, col=GMM_data_sub$species, pch=as.numeric(GMM_data_sub$species), typ="n",asp=1,
+# alternative plot species
+plot(DFA$CVscores, col=as.numeric(GMM_data$speices), pch=as.numeric(GMM_data$species), typ="n",asp=1, 
      xlab=paste("1st canonical axis", paste(round(DFA$Var[1,2],1),"%")),
-     ylab=paste("2nd canonical axis", paste(round(DFA$Var[2,2],1),"%")))
-text(DFA$CVscores, as.character(GMM_data_sub$species), col=as.numeric(GMM_data_sub$species), cex=.7)
+     ylab=paste("2nd canonical axis", paste(round(DFA$Var[2,2],1),"%"))) 
+text(DFA$CVscores, as.character(GMM_data$species), col=as.numeric(GMM_data$species), cex=.7)
+# alternative plot genus
 
-# Plot Mahalahobis distances as dendrogram #
+plot(DFA$CVscores, col=as.numeric(GMM_data$genus), pch=as.numeric(GMM_data$genus), typ="n",asp=1, 
+     xlab=paste("1st canonical axis", paste(round(DFA$Var[1,2],1),"%")),
+     ylab=paste("2nd canonical axis", paste(round(DFA$Var[2,2],1),"%"))) 
+text(DFA$CVscores, as.character(GMM_data$genus), col=as.numeric(GMM_data$genus), cex=.7)
+
+# Plot Mahalanobis distances as dendrogram #
 
 dendroS=hclust(DFA$Dist$GroupdistMaha)
-dendroS$labels=levels(GMM_data_sub$species)
+dendroS$labels=levels(GMM_data$genus)
 par(mar=c(6.5,4.5,1,1))
 dendroS=as.dendrogram(dendroS)
 plot(dendroS, main='',sub='', xlab="",
-     ylab='Mahalahobis distance')
-
-
+     ylab='Mahalanobis distance')
 
 
 #+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
-
-
 
 
 
@@ -107,13 +107,3 @@ plot(dendroS, main='',sub='', xlab="",
 #+ estimate location of missing landmarks (David will get more code for this)
 
 #+ predict group assignment based on DFA
-
-
-
-
-
-
-
-
-
-
