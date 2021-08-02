@@ -20,3 +20,90 @@ genus <-gsub("_.*","",specimen) # make a separate genus vector
 speciesV1 <-gsub("_M-.*","",specimen) # make a separate species vector part 1
 species <-gsub("_CJB.*","",speciesV1) # make a separate species vector part 2
 
+
+
+### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens
+
+GPA_landmarks <- gpagen(raw_data) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
+plot(GPA_landmarks)
+
+
+## CREATE GMM DATAFRAMES
+
+GMM_data <-geomorph.data.frame(coords=GPA_landmarks$coords,
+                               size=GPA_landmarks$Csize, species=species, genus=genus, specimen = specimen)
+
+
+## PRINCIPAL COMPONENT ANALYSIS ##
+
+GMM_data$coords <- two.d.array(GMM_data$coords) #get the data in XY format for PCA
+
+Sceloporine_PCA <- prcomp(GMM_data$coords) #PC analysis
+
+
+
+# PLOT PCA #
+
+PC_scores <- as.data.frame(Sceloporine_PCA$x)
+PC_scores <- cbind(PC_scores, genus= GMM_data$genus)
+percentage <- round(Sceloporine_PCA$sdev / sum(Sceloporine_PCA$sdev) * 100, 2) # find percentage variance explained by PC's
+percentage <- paste( colnames(PC_scores), "(", paste( as.character(percentage), "%", ")", sep="") )
+
+library(ggplot2)
+library(ggforce)
+p<-ggplot(PC_scores,aes(x=PC1,y=PC2,color=genus)) + 
+  #geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=species), size = 1) +
+  geom_point(size =3)+ xlab(percentage[1]) + ylab(percentage[2]) +
+  theme_classic()
+p
+
+## Discriminant Function Analysis ##
+
+library(Morpho)
+
+DFA<-CVA(GMM_data$coords, GMM_data$genus, cv = FALSE) # performs CVA (canonical variation analysis) aka Discriminant function analysis
+
+barplot(DFA$Var[,2]) # Variance explained by the canonical roots
+
+# Plot first two DF axes #
+
+DFA_cva <- data.frame(DFA$CVscores, genus = DFA$groups)
+
+ggplot(DFA_cva, aes(CV.1, CV.2)) +
+  geom_point(aes(color = genus)) + theme_classic()
+
+# alternative plot species
+plot(DFA$CVscores, col=as.numeric(GMM_data$speices), pch=as.numeric(GMM_data$species), typ="n",asp=1, 
+     xlab=paste("1st canonical axis", paste(round(DFA$Var[1,2],1),"%")),
+     ylab=paste("2nd canonical axis", paste(round(DFA$Var[2,2],1),"%"))) 
+text(DFA$CVscores, as.character(GMM_data$species), col=as.numeric(GMM_data$species), cex=.7)
+# alternative plot genus
+
+plot(DFA$CVscores, col=as.numeric(GMM_data$genus), pch=as.numeric(GMM_data$genus), typ="n",asp=1, 
+     xlab=paste("1st canonical axis", paste(round(DFA$Var[1,2],1),"%")),
+     ylab=paste("2nd canonical axis", paste(round(DFA$Var[2,2],1),"%"))) 
+text(DFA$CVscores, as.character(GMM_data$genus), col=as.numeric(GMM_data$genus), cex=.7)
+
+# Plot Mahalanobis distances as dendrogram #
+
+dendroS=hclust(DFA$Dist$GroupdistMaha)
+dendroS$labels=levels(GMM_data$genus)
+par(mar=c(6.5,4.5,1,1))
+dendroS=as.dendrogram(dendroS)
+plot(dendroS, main='',sub='', xlab="",
+     ylab='Mahalanobis distance')
+
+
+#+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
+
+
+
+## Missing landmarks dataset ##
+
+
+
+#same thing as above
+
+#+ estimate location of missing landmarks (David will get more code for this)
+
+#+ predict group assignment based on DFA
