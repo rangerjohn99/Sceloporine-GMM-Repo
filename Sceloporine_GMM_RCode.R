@@ -73,10 +73,12 @@ ggplot(DFA_cva, aes(CV.1, CV.2)) +
   geom_point(aes(color = genus)) + theme_classic()
 
 # alternative plot species
+
 plot(DFA$CVscores, col=as.numeric(GMM_data$speices), pch=as.numeric(GMM_data$species), typ="n",asp=1, 
      xlab=paste("1st canonical axis", paste(round(DFA$Var[1,2],1),"%")),
      ylab=paste("2nd canonical axis", paste(round(DFA$Var[2,2],1),"%"))) 
 text(DFA$CVscores, as.character(GMM_data$species), col=as.numeric(GMM_data$species), cex=.7)
+
 # alternative plot genus
 
 plot(DFA$CVscores, col=as.numeric(GMM_data$genus), pch=as.numeric(GMM_data$genus), typ="n",asp=1, 
@@ -93,16 +95,48 @@ dendroS=as.dendrogram(dendroS)
 plot(dendroS, main='',sub='', xlab="",
      ylab='Mahalanobis distance')
 
-
 #+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
-
-
 
 ## Missing landmarks dataset ##
 
+# Read in landmark tps file
 
+library(curl)
+library(geomorph)
+f3 <- curl("https://raw.githubusercontent.com/rangerjohn99/Sceloporine-GMM-Repo/main/Maxilla%20Lateral/TPS%20Files/Sceloporine%20Maxilla%20Landmarks.TPS")
+raw_data2 <- readland.tps(f3, specID = c("imageID"), negNA = TRUE) # the function "readland.tps" reads the landmark data in tps format and returns a 3D array of the coordinate data
+plot(raw_data2)
+head(raw_data2)
 
-#same thing as above
+# Read in csv file of specimens
+
+f4 <- curl("https://raw.githubusercontent.com/rangerjohn99/Sceloporine-GMM-Repo/main/Maxilla%20Lateral/TPS%20Files/Sceloporine%20Maxilla%20Specimens%20Correct%20N%20Updated.CSV")
+specimenList2 <- read.csv(f4, header = FALSE, sep = ",", stringsAsFactors = TRUE) # this is a matrix of each specimen  
+head(specimenList2)
+names(specimenList2)[2] <- "Specimen2"
+specimen2 <- gsub("\\\\", "", specimenList2$Specimen2) # backslashes are terrible to work with
+specimen2 <- gsub("'C:UsersKempLabBoxKemp LabGeometric Morphometrics ProjectProcessed ImagesMaxillaMaxilla Lateral", "", specimen2)
+library(dplyr)
+genus2 <-gsub("_.*","", specimen2) # make a separate genus vector
+speciesV2 <-gsub("_M-.*","",specimen2) # make a separate species vector part 1
+species2 <-gsub("_CJB.*","",speciesV2) # make a separate species vector part 2
+
+### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens
+
+estimate.missing(raw_data2, method = c("TPS", "Reg")) # need to estimate missing values before GPA       
+GPA_landmarks2 <- gpagen(raw_data2) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
+plot(GPA_landmarks2)
+
+## CREATE GMM DATAFRAMES
+
+GMM_data2 <-geomorph.data.frame(coords=GPA_landmarks2$coords,
+                               size=GPA_landmarks2$Csize, species=species2, genus=genus2, specimen = specimen2)
+
+## PRINCIPAL COMPONENT ANALYSIS ##
+
+GMM_data2$coords <- two.d.array(GMM_data2$coords) #get the data in XY format for PCA
+
+Sceloporine_PCA2 <- prcomp(GMM_data2$coords) #PC analysis
 
 #+ estimate location of missing landmarks (David will get more code for this)
 
