@@ -95,8 +95,6 @@ dendroS=as.dendrogram(dendroS)
 plot(dendroS, main='',sub='', xlab="",
      ylab='Mahalanobis distance')
 
-#+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
-
 ## Missing landmarks dataset ##
 
 # Read in landmark tps file
@@ -137,6 +135,23 @@ GMM_data2 <-geomorph.data.frame(coords=GPA_landmarks2$coords,
 GMM_data2$coords <- two.d.array(GMM_data2$coords) #get the data in XY format for PCA
 
 Sceloporine_PCA2 <- prcomp(GMM_data2$coords) #PC analysis
+
+# PLOT PCA #
+
+PC_scores2 <- as.data.frame(Sceloporine_PCA2$x)
+PC_scores2 <- cbind(PC_scores2, genus= GMM_data2$genus)
+percentage2 <- round(Sceloporine_PCA2$sdev / sum(Sceloporine_PCA2$sdev) * 100, 2) # find percentage variance explained by PC's
+percentage2 <- paste(colnames(PC_scores2), "(", paste( as.character(percentage2), "%", ")", sep="") )
+
+library(ggplot2)
+library(ggforce)
+p2<-ggplot(PC_scores2,aes(x=PC1,y=PC2,color=genus)) + 
+  #geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=species), size = 1) +
+  geom_point(size =3)+ xlab(percentage[1]) + ylab(percentage[2]) +
+  theme_classic()
+p2
+
+#+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
 
 #+ estimate location of missing landmarks (David will get more code for this)
 
