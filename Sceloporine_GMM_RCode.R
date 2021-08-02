@@ -72,6 +72,7 @@ DFA_cva <- data.frame(DFA$CVscores, genus = DFA$groups)
 ggplot(DFA_cva, aes(CV.1, CV.2)) +
   geom_point(aes(color = genus)) + theme_classic()
 
+
 # alternative plot species
 
 plot(DFA$CVscores, col=as.numeric(GMM_data$speices), pch=as.numeric(GMM_data$species), typ="n",asp=1, 
@@ -89,7 +90,7 @@ text(DFA$CVscores, as.character(GMM_data$genus), col=as.numeric(GMM_data$genus),
 # Plot Mahalanobis distances as dendrogram #
 
 dendroS=hclust(DFA$Dist$GroupdistMaha)
-dendroS$labels=levels(GMM_data$genus)
+dendroS$labels=levels(as.factor(GMM_data$genus))
 par(mar=c(6.5,4.5,1,1))
 dendroS=as.dendrogram(dendroS)
 plot(dendroS, main='',sub='', xlab="",
@@ -106,6 +107,12 @@ raw_data2 <- readland.tps(f3, specID = c("imageID"), negNA = TRUE) # the functio
 plot(raw_data2)
 head(raw_data2)
 
+
+missing_landmarks <- apply(is.na(raw_data2), 3, which) #find which rows have missing landmarks
+## Get names of elements with length > 0
+specimens_missing_landmarks <- names(missing_landmarks)[lapply(missing_landmarks, length) > 0]
+
+
 # Read in csv file of specimens
 
 f4 <- curl("https://raw.githubusercontent.com/rangerjohn99/Sceloporine-GMM-Repo/main/Maxilla%20Lateral/TPS%20Files/Sceloporine%20Maxilla%20Specimens%20Correct%20N%20Updated.CSV")
@@ -119,11 +126,14 @@ genus2 <-gsub("_.*","", specimen2) # make a separate genus vector
 speciesV2 <-gsub("_M-.*","",specimen2) # make a separate species vector part 1
 species2 <-gsub("_CJB.*","",speciesV2) # make a separate species vector part 2
 
+
+
 ### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens
 
-estimate.missing(raw_data2, method = c("TPS", "Reg")) # need to estimate missing values before GPA       
-GPA_landmarks2 <- gpagen(raw_data2) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
+estimated_landmarks <- estimate.missing(raw_data2, method = c("TPS")) # need to estimate missing values before GPA       
+GPA_landmarks2 <- gpagen(estimated_landmarks) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
 plot(GPA_landmarks2)
+
 
 ## CREATE GMM DATAFRAMES
 
@@ -145,9 +155,9 @@ percentage2 <- paste(colnames(PC_scores2), "(", paste( as.character(percentage2)
 
 library(ggplot2)
 library(ggforce)
-p2<-ggplot(PC_scores2,aes(x=PC1,y=PC2,color=genus)) + 
+p2<-ggplot(PC_scores2,aes(x=PC1,y=PC2,label=specimen2)) + 
   #geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=species), size = 1) +
-  geom_point(size =3)+ xlab(percentage[1]) + ylab(percentage[2]) +
+  geom_point() +geom_text(aes(label=specimen2),hjust=0, vjust=0)+ xlab(percentage[1]) + ylab(percentage[2]) +
   theme_classic()
 p2
 
