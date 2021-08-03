@@ -20,27 +20,21 @@ genus <-gsub("_.*","",specimen) # make a separate genus vector
 speciesV1 <-gsub("_M-.*","",specimen) # make a separate species vector part 1
 species <-gsub("_CJB.*","",speciesV1) # make a separate species vector part 2
 
-
-
 ### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens
 
 GPA_landmarks <- gpagen(raw_data) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
 plot(GPA_landmarks)
-
 
 ## CREATE GMM DATAFRAMES
 
 GMM_data <-geomorph.data.frame(coords=GPA_landmarks$coords,
                                size=GPA_landmarks$Csize, species=species, genus=genus, specimen = specimen)
 
-
 ## PRINCIPAL COMPONENT ANALYSIS ##
 
 GMM_data$coords <- two.d.array(GMM_data$coords) #get the data in XY format for PCA
 
 Sceloporine_PCA <- prcomp(GMM_data$coords) #PC analysis
-
-
 
 # PLOT PCA #
 
@@ -72,7 +66,6 @@ DFA_cva <- data.frame(DFA$CVscores, genus = DFA$groups)
 ggplot(DFA_cva, aes(CV.1, CV.2)) +
   geom_point(aes(color = genus)) + theme_classic()
 
-
 # alternative plot species
 
 plot(DFA$CVscores, col=as.numeric(GMM_data$speices), pch=as.numeric(GMM_data$species), typ="n",asp=1, 
@@ -96,6 +89,8 @@ dendroS=as.dendrogram(dendroS)
 plot(dendroS, main='',sub='', xlab="",
      ylab='Mahalanobis distance')
 
+
+
 ## Missing landmarks dataset ##
 
 # Read in landmark tps file
@@ -107,11 +102,9 @@ raw_data2 <- readland.tps(f3, specID = c("imageID"), negNA = TRUE) # the functio
 plot(raw_data2)
 head(raw_data2)
 
-
 missing_landmarks <- apply(is.na(raw_data2), 3, which) #find which rows have missing landmarks
 ## Get names of elements with length > 0
 specimens_missing_landmarks <- names(missing_landmarks)[lapply(missing_landmarks, length) > 0]
-
 
 # Read in csv file of specimens
 
@@ -126,19 +119,17 @@ genus2 <-gsub("_.*","", specimen2) # make a separate genus vector
 speciesV2 <-gsub("_M-.*","",specimen2) # make a separate species vector part 1
 species2 <-gsub("_CJB.*","",speciesV2) # make a separate species vector part 2
 
-
-
 ### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens
 
 estimated_landmarks <- estimate.missing(raw_data2, method = c("TPS")) # need to estimate missing values before GPA       
 GPA_landmarks2 <- gpagen(estimated_landmarks) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
-plot(GPA_landmarks2)
 
+plot(GPA_landmarks2) # a bit messy but that's expected
 
 ## CREATE GMM DATAFRAMES
 
 GMM_data2 <-geomorph.data.frame(coords=GPA_landmarks2$coords,
-                               size=GPA_landmarks2$Csize, species=species2, genus=genus2, specimen = specimen2)
+                                size=GPA_landmarks2$Csize, species=species2, genus=genus2, specimen = specimen2)
 
 ## PRINCIPAL COMPONENT ANALYSIS ##
 
@@ -155,11 +146,16 @@ percentage2 <- paste(colnames(PC_scores2), "(", paste( as.character(percentage2)
 
 library(ggplot2)
 library(ggforce)
+
+p2<-ggplot(PC_scores2,aes(x=PC1,y=PC2,label=genus2)) + 
+  #geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=species), size = 1) +
+  geom_point() +geom_text(aes(label=genus2),hjust=0, vjust=0)+ xlab(percentage2[1]) + ylab(percentage2[2]) +
+
 p2<-ggplot(PC_scores2,aes(x=PC1,y=PC2,label=specimen2)) + 
   #geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=species), size = 1) +
   geom_point() +geom_text(aes(label=specimen2),hjust=0, vjust=0)+ xlab(percentage[1]) + ylab(percentage[2]) +
   theme_classic()
-p2
+p2 #there's 1 sceloporus messing it up otherwise it looks good
 
 #+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
 
