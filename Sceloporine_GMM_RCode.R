@@ -43,19 +43,18 @@ Sceloporine_PCA <- prcomp(GMM_data$coords) #PC analysis
 
 
 
-
 # PLOT PCA #__________________________________________________________________________ 
 
 
 PC_scores <- as.data.frame(Sceloporine_PCA$x)
-PC_scores <- cbind(PC_scores, genus= GMM_data$genus)
+PC_scores <- cbind(PC_scores, genus= GMM_data$genus, est = as.factor("FALSE"))
 percentage <- round(Sceloporine_PCA$sdev / sum(Sceloporine_PCA$sdev) * 100, 2) # find percentage variance explained by PC's
 percentage <- paste( colnames(PC_scores), "(", paste( as.character(percentage), "%", ")", sep="") )
 
 library(ggplot2)
 library(ggforce)
 p<-ggplot(PC_scores,aes(x=PC1,y=PC2,color=genus)) + 
-  #geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=species), size = 1) +
+  geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=genus), size = 1) +
   geom_point(size =3)+ xlab(percentage[1]) + ylab(percentage[2]) +
   theme_classic()
 p
@@ -73,7 +72,7 @@ ggplot(DFA_cva, aes(CV.1, CV.2)) +
 # Mahalanobis distance probabilities
 cva.1$Dist$probsMaha
 
-# Visualize a shape change from score -5 to 5 for CV1/CV2
+# Visualize a shape change from score -5 to 5 for CV1/CV2______________________________________________________________
 cvall <- cva.1
 proc<-procSym(GPA_landmarks$coords)
 cvvis5 <- 5*cvall$CVvis[,1]+cvall$Grandm
@@ -97,7 +96,7 @@ CVA2n<-cvvisNeg5_2
 
 
 
-## Missing landmarks dataset ##
+## Missing landmarks dataset ##______________________________________________________________
 
 # Read in landmark tps file
 
@@ -130,13 +129,13 @@ species2 <-gsub("_CJB.*","",speciesV2) # make a separate species vector part 2
 
 
 
-### ESTIMATE LOCATION OF MISSING LANDMARKS
+### ESTIMATE LOCATION OF MISSING LANDMARKS______________________________________________________________
 
 estimated_landmarks <- estimate.missing(raw_data2, method = c("TPS")) # need to estimate missing values before GPA       
 
 
 
-### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens
+### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens______________________________________________________________
 
 GPA_landmarks2 <- gpagen(estimated_landmarks) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
 
@@ -164,7 +163,7 @@ GPA_sub[["land"]] <- splitLand
 # Specify a vector of the specimen names you want to extract
 
 missing_landmarks <- apply(is.na(raw_data2), 3, which) #find which rows have missing landmarks
-## Get names of elements with length > 0
+  ## Get names of elements with length > 0
 specimens_missing_landmarks <- names(missing_landmarks)[lapply(missing_landmarks, length) > 0]
 specimens_missing_landmarks <- gsub("\\\\", "", specimens_missing_landmarks) # backslashes are terrible to work with
 specimens_missing_landmarks <- gsub("C:UsersKempLabBoxKemp LabGeometric Morphometrics ProjectProcessed ImagesMaxillaMaxilla Lateral", "", specimens_missing_landmarks)
@@ -227,60 +226,58 @@ dim(GMM_data_s$land) <- c(11,2,nrow(specimens_sub))
 attributes(GMM_data_s$land)$dimnames[[3]] <- GMM_data_s$specimenName
 
 
-
-
-
-
-
-
-
-
 ## CREATE GMM DATAFRAMES
 
 
 GMM_data2 <-geomorph.data.frame(coords=GMM_data_s$land,
                                size=GMM_data_s$size, species=GMM_data_s$species, genus=GMM_data_s$genus, specimen = GMM_data_s$specimen)
 
-GMM_data2 <-geomorph.data.frame(coords=GPA_landmarks2$coords,
-                                size=GPA_landmarks2$Csize, species=species2, genus=genus2, specimen = specimen2)
+GMM_data2$coords <- two.d.array(GMM_data2$coords) #get the data in XY format for PCA
 
 
 ## PRINCIPAL COMPONENT ANALYSIS ##
 
-GPA_landmarks2$coords <- two.d.array(GPA_landmarks2$coords) #get the data in XY format for PCA
-Sceloporine_PCA2 <- prcomp(GPA_landmarks2$coords) #PC analysis
+# PROJECT ESTIMATED DATA #
+dimnames(GMM_data$coords) <- NULL
+Sceloporine_PCA <- prcomp(GMM_data$coords) #PC analysis
+
+Est_PCA <- predict(Sceloporine_PCA, GMM_data2$coords)
+Est_PC_scores <- as.data.frame(Est_PCA)
+Est_PC_scores <- cbind(Est_PC_scores, genus=GMM_data_s$genus, est = as.factor("TRUE"))
+
+All_PC_scores <- rbind(PC_scores, Est_PC_scores) # create a new dataframe with the original PC scores and the PC scores the estimated specimens
 
 # PLOT PCA #
-
-PC_scores2 <- as.data.frame(Sceloporine_PCA2$x)
-PC_scores2 <- cbind(PC_scores2, genus= genus2, specimen = specimen2)
-percentage2 <- round(Sceloporine_PCA2$sdev / sum(Sceloporine_PCA2$sdev) * 100, 2) # find percentage variance explained by PC's
-percentage2 <- paste(colnames(PC_scores2), "(", paste( as.character(percentage2), "%", ")", sep="") )
+speciescolors <- c("#666600", "#C9D42D" ,"#42CEBC" ,"#F2AB1F" ,"#864ED0" ,"#261ACE", "#086AFD", "#08FD6A", "#0C8B3F", "#E50CF5", "#FF5E00","#FF0000", "#FF6A6A", "#D5930F", "#9E1616")
+speciesshapes <- c(rep(16,16), rep(20,30))
 
 library(ggplot2)
 library(ggforce)
-
-p2<-ggplot(PC_scores2,aes(x=PC1,y=PC2,color=genus2)) + 
-
-
-p2<-ggplot(PC_scores2,aes(x=PC1,y=PC2,label=genus2)) + 
+p2<-ggplot(All_PC_scores,aes(x=PC1,y=PC2,color=genus, shape = est)) + 
   #geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=species), size = 1) +
-  geom_point() +geom_text(aes(label=genus2),hjust=0, vjust=0)+ xlab(percentage2[1]) + ylab(percentage2[2]) +
-
-p2<-ggplot(PC_scores2,aes(x=PC1,y=PC2,label=specimen2)) + 
-
-  #geom_mark_hull(concavity = 5,expand=0,radius=0,aes(color=species), size = 1) +
-  geom_point() + xlab(percentage2[1]) + ylab(percentage2[2]) +
+  geom_point(size =3)+ xlab(percentage[1]) + ylab(percentage[2]) +
+  #scale_color_manual(name = "Species", breaks=levels(All_PC_scores$genus),  values=c(speciescolors, "black", "black", "black", "black", "black")) +
+  #scale_shape_manual(values = c(speciesshapes), guide = 'none') + 
   theme_classic()
-p2 #there's 1 sceloporus messing it up otherwise it looks good
+p2
 
 
+#### Linear Discriminant Analysis (LDA) ####________________________________________________________________________
 
+# Run LDA Analysis
+Scelop.lda<-lda(PC_scores[,1:14], grouping = genus,CV=F) #Performs LDA
+Train.pred<-predict(Scelop.lda, PC_scores[,1:14]) #Get Modern Probabilities
+Test.pred<-predict(Scelop.lda, Est_PC_scores[,1:14]) #Performs Prediction
 
+plot(Scelop.lda, col = as.integer(genus))
 
+# See LDA Results  
+Est.posteriors<-Test.pred$posterior
+Est.class<-Test.pred$class
+Est.scores<-Test.pred$x
 
-lda.test <- classify(DFA, newdata =  GMM_data2$coords)
-CV <- predict(DFA, GMM_data2$coords)
+table(Est.class,Est_PC_scores$genus)
+
 
 
 
@@ -290,7 +287,6 @@ CV <- predict(DFA, GMM_data2$coords)
 
 #+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
 
-#+ estimate location of missing landmarks (David will get more code for this)
 
 #+ predict group assignment based on DFA
 
