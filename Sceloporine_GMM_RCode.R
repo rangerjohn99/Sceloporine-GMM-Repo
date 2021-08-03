@@ -93,7 +93,15 @@ deformGrid2d(cvvis5_2,cvvisNeg5_2,ngrid = 0, wireframe = 1:11,col1 = 1, col2 = 2
 CVA2p<-cvvis5_2
 CVA2n<-cvvisNeg5_2
 
-
+### RANDOM FOREST CLASSIFICATION ###:Non-parametric
+PC_scores_rf <- data.frame(Sceloporine_PCA$x, genus= as.factor(genus))
+library(randomForest)
+set.seed(123)
+Scelop.rf <- randomForest(genus ~., data=PC_scores_rf)
+print(Scelop.rf)
+rf_acc <- Scelop.rf$confusion
+rf_acc <- 1-rf_acc[,4] # percent correct classification
+rf_acc
 
 
 ## Missing landmarks dataset ##______________________________________________________________
