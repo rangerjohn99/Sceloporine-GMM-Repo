@@ -59,6 +59,9 @@ p<-ggplot(PC_scores,aes(x=PC1,y=PC2,color=genus)) +
   theme_classic()
 p
 
+plot3d(PC_scores[,1:3])#interactive 3D plots
+text3d(PC_scores[,1:3],texts=(PC_scores$genus),pos=4,cex=.5)
+
 #### Canonical Variate Analysis ####__________________________________________________________________________ 
 
 library(Morpho)
@@ -79,19 +82,16 @@ cvvis5 <- 5*cvall$CVvis[,1]+cvall$Grandm
 cvvisNeg5 <- -5*cvall$CVvis[,1]+cvall$Grandm
 cvvis5 <- showPC(cvvis5,proc$PCs[,1:14],proc$mshape)
 cvvisNeg5 <- showPC(cvvisNeg5,proc$PCs[,1:14],proc$mshape)
-deformGrid2d(cvvis5,cvvisNeg5,ngrid = 0)
+deformGrid2d(cvvis5,cvvisNeg5,ngrid = 0, wireframe = 1:11)
 CVA1p<-cvvis5
 CVA1n<-cvvisNeg5
 cvvis5_2 <- 5*cvall$CVvis[,2]+cvall$Grandm
-cvvisNeg5_2 <- -5*cvall$CVvis[,2]+cvall$Grandm
+cvvisNeg5_2 <- -2.5*cvall$CVvis[,2]+cvall$Grandm
 cvvis5_2 <- showPC(cvvis5_2,proc$PCs[,1:14],proc$mshape)
 cvvisNeg5_2 <- showPC(cvvisNeg5_2,proc$PCs[,1:14],proc$mshape)
-deformGrid2d(cvvis5_2,cvvisNeg5_2,ngrid = 0)
+deformGrid2d(cvvis5_2,cvvisNeg5_2,ngrid = 0, wireframe = 1:11,col1 = 1, col2 = 2)
 CVA2p<-cvvis5_2
 CVA2n<-cvvisNeg5_2
-
-
-
 
 
 
@@ -134,14 +134,14 @@ species2 <-gsub("_CJB.*","",speciesV2) # make a separate species vector part 2
 estimated_landmarks <- estimate.missing(raw_data2, method = c("TPS")) # need to estimate missing values before GPA       
 
 
-
 ### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens______________________________________________________________
 
 GPA_landmarks2 <- gpagen(estimated_landmarks) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
 
 plot(GPA_landmarks2) # a bit messy but that's expected
 
-### SUBSET TPS TO GENERATE DATASET INCLUDING ONLY SPECIMENS WITH ESTIMATED LANDMARKS
+
+### SUBSET TPS TO GENERATE DATASET INCLUDING ONLY SPECIMENS WITH ESTIMATED LANDMARKS______________________________________________________________
 
 library(tidyverse)
 new <- list(land = estimated_landmarks, size = GPA_landmarks2$Csize,  species=species2, genus = genus2, specimen = specimen2)
@@ -226,8 +226,7 @@ dim(GMM_data_s$land) <- c(11,2,nrow(specimens_sub))
 attributes(GMM_data_s$land)$dimnames[[3]] <- GMM_data_s$specimenName
 
 
-## CREATE GMM DATAFRAMES
-
+## CREATE GMM DATAFRAMES______________________________________________________________
 
 GMM_data2 <-geomorph.data.frame(coords=GMM_data_s$land,
                                size=GMM_data_s$size, species=GMM_data_s$species, genus=GMM_data_s$genus, specimen = GMM_data_s$specimen)
@@ -235,7 +234,7 @@ GMM_data2 <-geomorph.data.frame(coords=GMM_data_s$land,
 GMM_data2$coords <- two.d.array(GMM_data2$coords) #get the data in XY format for PCA
 
 
-## PRINCIPAL COMPONENT ANALYSIS ##
+## PRINCIPAL COMPONENT ANALYSIS ##______________________________________________________________
 
 # PROJECT ESTIMATED DATA #
 dimnames(GMM_data$coords) <- NULL
@@ -266,29 +265,32 @@ p2
 
 # Run LDA Analysis
 Scelop.lda<-lda(PC_scores[,1:14], grouping = genus,CV=F) #Performs LDA
-Train.pred<-predict(Scelop.lda, PC_scores[,1:14]) #Get Modern Probabilities
-Test.pred<-predict(Scelop.lda, Est_PC_scores[,1:14]) #Performs Prediction
 
 plot(Scelop.lda, col = as.integer(genus))
 
 # See LDA Results  
+# Classifying Unknown Specimens in LDA
+Test.pred<-predict(Scelop.lda, Est_PC_scores[,1:14]) #Performs Prediction
 Est.posteriors<-Test.pred$posterior
-Est.class<-Test.pred$class
 Est.scores<-Test.pred$x
 
-table(Est.class,Est_PC_scores$genus)
+table(Est_PC_scores$genus, Test.pred$class)
 
 
+# Classifying Unknown Specimens in CVA ####________________________________________________________________________
+ 
+CVAProb<-typprobClass(Est_PC_scores[,1:14], PC_scores[,1:14], groups = as.factor(PC_scores$genus),small = T, method = "wilson", cova = T, outlier = 0.001, cv =T)
+CVAProb$probsCV
+CVAProb$groupaffin
+CVAProb$probs
 
-
-
-
+table(Est_PC_scores$genus, CVAProb$groupaffin)
 
 
 #+ find which landmarks are important in discriminating between groups (genera) (David will get more code for this)
 
 
-#+ predict group assignment based on DFA
+#+ predict group assignment based on KNN & RF?
 
 
 
