@@ -41,14 +41,23 @@ GMM_data$coords <- two.d.array(GMM_data$coords) #get the data in XY format for P
 
 Sceloporine_PCA <- prcomp(GMM_data$coords) #PC analysis
 
+Sceloporine_PCA2 <- gm.prcomp(GPA_landmarks$coords)
+summary(Sceloporine_PCA2)
+plot(Sceloporine_PCA2, main = "PCA", col=as.numeric(as.factor(genus)), cex = 1.5, cex.lab = 1.5, font.lab = 2)
+text(Sceloporine_PCA2$x, as.character(as.factor(genus)),col=as.numeric(as.factor(genus)), cex=.7)
+
+
+scallinks <- matrix(c(1,rep(2:11, each=2),1), nrow=11, byrow=TRUE)
+plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp1$min, Sceloporine_PCA2$shapes$shapes.comp1$max, method = "points", mag = 1, links = scallinks)
+plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp2$min, Sceloporine_PCA2$shapes$shapes.comp2$max, method = "vector", mag = 1, links = scallinks)
+
 
 
 # PLOT PCA #__________________________________________________________________________ 
 
-
 PC_scores <- as.data.frame(Sceloporine_PCA$x)
 PC_scores <- cbind(PC_scores, genus= GMM_data$genus, est = as.factor("FALSE"))
-percentage <- round(Sceloporine_PCA$sdev / sum(Sceloporine_PCA$sdev) * 100, 2) # find percentage variance explained by PC's
+percentage <- round(Sceloporine_PCA$sdev^2 / sum(Sceloporine_PCA$sdev^2) * 100, 2) # find percentage variance explained by PC's
 percentage <- paste( colnames(PC_scores), "(", paste( as.character(percentage), "%", ")", sep="") )
 
 library(ggplot2)
@@ -62,6 +71,13 @@ p
 plot3d(PC_scores[,1:3])#interactive 3D plots
 text3d(PC_scores[,1:3],texts=(PC_scores$genus),pos=4,cex=.5)
 
+# Calculating Mean Shapes for Genera  
+Sceloporus_mshape <- mshape(GPA_landmarks$coords[,,1:17])
+Urosaurus_mshape <- mshape(GPA_landmarks$coords[,,18:22])
+Uta_mshape <- mshape(GPA_landmarks$coords[,,23:34])
+
+deformGrid2d(Sceloporus_mshape,Urosaurus_mshape,ngrid = 0, wireframe = 1:11)
+
 #### Canonical Variate Analysis ####__________________________________________________________________________ 
 
 library(Morpho)
@@ -74,7 +90,7 @@ ggplot(DFA_cva, aes(CV.1, CV.2)) +
 
 # Mahalanobis distance probabilities
 cva.1$Dist$probsMaha
-
+?showPC
 # Visualize a shape change from score -5 to 5 for CV1/CV2______________________________________________________________
 cvall <- cva.1
 proc<-procSym(GPA_landmarks$coords)
