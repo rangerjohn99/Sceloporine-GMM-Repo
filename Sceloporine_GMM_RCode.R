@@ -46,7 +46,7 @@ summary(Sceloporine_PCA2)
 plot(Sceloporine_PCA2, main = "PCA", col=as.numeric(as.factor(genus)), cex = 1.5, cex.lab = 1.5, font.lab = 2)
 text(Sceloporine_PCA2$x, as.character(as.factor(genus)),col=as.numeric(as.factor(genus)), cex=.7)
 
-
+## VIEW SHAPES ON PRINCIPAL COMPONENTS ##__________________________________________________________________________ 
 scallinks <- matrix(c(1,rep(2:11, each=2),1), nrow=11, byrow=TRUE)
 plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp1$min, Sceloporine_PCA2$shapes$shapes.comp1$max, method = "points", mag = 1, links = scallinks)
 plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp2$min, Sceloporine_PCA2$shapes$shapes.comp2$max, method = "vector", mag = 1, links = scallinks)
@@ -76,7 +76,6 @@ Sceloporus_mshape <- mshape(GPA_landmarks$coords[,,1:17])
 Urosaurus_mshape <- mshape(GPA_landmarks$coords[,,18:22])
 Uta_mshape <- mshape(GPA_landmarks$coords[,,23:34])
 
-deformGrid2d(Sceloporus_mshape,Urosaurus_mshape,ngrid = 0, wireframe = 1:11)
 
 #### Canonical Variate Analysis ####__________________________________________________________________________ 
 
