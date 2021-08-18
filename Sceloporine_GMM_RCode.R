@@ -1,4 +1,4 @@
-### Geometric Morphometrics of Maxilla ###
+### Geometric Morphometrics of Maxilla ###---------------------------------
 
 # Read in landmark tps file__________________________________________________________________________ 
 library(curl)
@@ -176,7 +176,7 @@ plot(GPA_landmarksTPS) # a bit messy but that's expected
 plot(GPA_landmarks2WNN) # a bit messy but that's expected
 
 
-### SUBSET TPS TO GENERATE DATASET INCLUDING ONLY SPECIMENS WITH ESTIMATED LANDMARKS______________________________________________________________
+## SUBSET TPS TO GENERATE DATASET INCLUDING ONLY SPECIMENS WITH ESTIMATED LANDMARKS---------------------------------
 
 library(tidyverse)
 new <- list(land = estimated_landmarks, size = GPA_landmarks2$Csize,  species=species2, genus = genus2, specimen = specimen2)
@@ -261,7 +261,7 @@ dim(GMM_data_s$land) <- c(11,2,nrow(specimens_sub))
 attributes(GMM_data_s$land)$dimnames[[3]] <- GMM_data_s$specimenName
 
 
-## CREATE GMM DATAFRAMES______________________________________________________________
+## CREATE GMM DATAFRAMES---------------------------------
 
 GMM_data2 <-geomorph.data.frame(coords=GMM_data_s$land,
                                size=GMM_data_s$size, species=GMM_data_s$species, genus=GMM_data_s$genus, specimen = GMM_data_s$specimen)
