@@ -292,8 +292,8 @@ p2<-ggplot(All_PC_scores,aes(x=PC1,y=PC2,color=genus, shape = est)) +
   geom_point(size =3)+ xlab(percentage[1]) + ylab(percentage[2]) +
   #scale_color_manual(name = "Species", breaks=levels(All_PC_scores$genus),  values=c(speciescolors, "black", "black", "black", "black", "black")) +
   #scale_shape_manual(values = c(speciesshapes), guide = 'none') + 
-  theme_classic() + 
-  geom_text(label=(specimen3), nudge_x = 0.0, nudge_y = 0.0, check_overlap = F)
+  theme_classic() 
+  #+ geom_text(label=(specimen3), nudge_x = 0.0, nudge_y = 0.0, check_overlap = F)
 p2
 
 
@@ -317,7 +317,7 @@ table(Est_PC_scores$genus, Test.pred$class)
 # Classifying Unknown Specimens in CVA ####________________________________________________________________________
 ?typprobClass
 
-CVAProb<-typprobClass(Est_PC_scores[,1:14], PC_scores[,1:14], groups = as.factor(PC_scores$genus),small = T, method = "wilson", cova = T, outlier = 0.001, cv =T)
+CVAProb<-typprobClass(Est_PC_scores[,1:14], PC_scores[,1:14], groups = as.factor(PC_scores$genus),small = T, method = "wilson", cova = T, outlier = 0.001, cv =F)
 CVAProb$probsCV
 CVAProb$groupaffin
 CVAProb$probs
