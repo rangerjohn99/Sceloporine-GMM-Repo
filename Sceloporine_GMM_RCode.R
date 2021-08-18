@@ -47,10 +47,9 @@ plot(Sceloporine_PCA2, main = "PCA", col=as.numeric(as.factor(genus)), cex = 1.5
 text(Sceloporine_PCA2$x, as.character(as.factor(genus)),col=as.numeric(as.factor(genus)), cex=.7)
 
 ## VIEW SHAPES ON PRINCIPAL COMPONENTS ##__________________________________________________________________________ 
-scallinks <- matrix(c(1,rep(2:11, each=2),1), nrow=11, byrow=TRUE)
-plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp1$min, Sceloporine_PCA2$shapes$shapes.comp1$max, method = "points", mag = 1, links = scallinks)
-plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp2$min, Sceloporine_PCA2$shapes$shapes.comp2$max, method = "vector", mag = 1, links = scallinks)
-
+scallinks <- matrix(c(1,rep(2:11, each=2),1), nrow=11, byrow=TRUE) #link landmarks
+plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp1$min, Sceloporine_PCA2$shapes$shapes.comp1$max, method = "points", mag = 1, links = scallinks) #shapes corresponding to PC1 min and max; grey=min 
+plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp2$min, Sceloporine_PCA2$shapes$shapes.comp2$max, method = "points", mag = 1, links = scallinks) #shapes corresponding to PC2 min and max; grey=min
 
 
 # PLOT PCA #__________________________________________________________________________ 
@@ -58,7 +57,7 @@ plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp2$min, Sceloporine_PCA2$shape
 PC_scores <- as.data.frame(Sceloporine_PCA$x)
 PC_scores <- cbind(PC_scores, genus= GMM_data$genus, est = as.factor("FALSE"))
 percentage <- round(Sceloporine_PCA$sdev^2 / sum(Sceloporine_PCA$sdev^2) * 100, 2) # find percentage variance explained by PC's
-percentage <- paste( colnames(PC_scores), "(", paste( as.character(percentage), "%", ")", sep="") )
+percentage <- paste( colnames(PC_scores), "(",paste(as.character(percentage), "%", ")", sep=""))
 
 library(ggplot2)
 library(ggforce)
@@ -71,25 +70,33 @@ p
 plot3d(PC_scores[,1:3])#interactive 3D plots
 text3d(PC_scores[,1:3],texts=(PC_scores$genus),pos=4,cex=.5)
 
+
 # Calculating Mean Shapes for Genera  
 Sceloporus_mshape <- mshape(GPA_landmarks$coords[,,1:17])
 Urosaurus_mshape <- mshape(GPA_landmarks$coords[,,18:22])
 Uta_mshape <- mshape(GPA_landmarks$coords[,,23:34])
+
+plotRefToTarget(Urosaurus_mshape, Uta_mshape, method = "points", mag = 1, links = scallinks) #shapes corresponding to PC2 min and max; grey=Urosaurus
+plotRefToTarget(Sceloporus_mshape, Urosaurus_mshape, method = "points", mag = 1, links = scallinks) #shapes corresponding to PC2 min and max; grey=Sceloporus
+plotRefToTarget(Sceloporus_mshape, Uta_mshape, method = "points", mag = 1, links = scallinks) #shapes corresponding to PC2 min and max; grey=Sceloporus
 
 
 #### Canonical Variate Analysis ####__________________________________________________________________________ 
 
 library(Morpho)
 
-cva.1<-CVA(PC_scores[,1:14], groups = genus, rounds = 10000)
+cva.1<-CVA(PC_scores[,1:14], groups = genus, cv = TRUE)
 DFA_cva <- data.frame(cva.1$CVscores, genus = genus)
 ggplot(DFA_cva, aes(CV.1, CV.2)) +
   geom_point(aes(color = genus)) + xlab(paste("1st Canonical Axis", paste(round(cva.1$Var[1,2],1),"%"))) + ylab(paste("2nd Canonical Axis", paste(round(cva.1$Var[2,2],1),"%"))) + 
   theme_classic()
 
+typprobs <- typprobClass(cva.1$CVscores,groups= as.factor( genus)) #classification accuracy from jackknife Crossvalidation, < 0.01 posterior prob assigned to no class
+print(typprobs)
+
 # Mahalanobis distance probabilities
 cva.1$Dist$probsMaha
-?showPC
+
 # Visualize a shape change from score -5 to 5 for CV1/CV2______________________________________________________________
 cvall <- cva.1
 proc<-procSym(GPA_landmarks$coords)
@@ -97,19 +104,20 @@ cvvis5 <- 5*cvall$CVvis[,1]+cvall$Grandm
 cvvisNeg5 <- -5*cvall$CVvis[,1]+cvall$Grandm
 cvvis5 <- showPC(cvvis5,proc$PCs[,1:14],proc$mshape)
 cvvisNeg5 <- showPC(cvvisNeg5,proc$PCs[,1:14],proc$mshape)
-deformGrid2d(cvvis5,cvvisNeg5,ngrid = 0, wireframe = 1:11)
+deformGrid2d(cvvis5,cvvisNeg5,ngrid = 0, wireframe = 1:11,col1 = 1, col2 = 2) #shape change from score -5 to 5 for CV; red = -5
 CVA1p<-cvvis5
 CVA1n<-cvvisNeg5
+
 cvvis5_2 <- 5*cvall$CVvis[,2]+cvall$Grandm
 cvvisNeg5_2 <- -2.5*cvall$CVvis[,2]+cvall$Grandm
 cvvis5_2 <- showPC(cvvis5_2,proc$PCs[,1:14],proc$mshape)
 cvvisNeg5_2 <- showPC(cvvisNeg5_2,proc$PCs[,1:14],proc$mshape)
-deformGrid2d(cvvis5_2,cvvisNeg5_2,ngrid = 0, wireframe = 1:11,col1 = 1, col2 = 2)
+deformGrid2d(cvvis5_2,cvvisNeg5_2,ngrid = 0, wireframe = 1:11,col1 = 1, col2 = 2) #shape change from score -5 to 5 for CV; red = -5
 CVA2p<-cvvis5_2
 CVA2n<-cvvisNeg5_2
 
 ### RANDOM FOREST CLASSIFICATION ###:Non-parametric
-PC_scores_rf <- data.frame(Sceloporine_PCA$x, genus= as.factor(genus))
+PC_scores_rf <- data.frame(Sceloporine_PCA$x[,1:5], genus= as.factor(genus))
 library(randomForest)
 set.seed(123)
 Scelop.rf <- randomForest(genus ~., data=PC_scores_rf)
@@ -132,8 +140,8 @@ head(raw_data2)
 
 
 missing_landmarks <- apply(is.na(raw_data2), 3, which) #find which rows have missing landmarks
-## Get names of elements with length > 0
-specimens_missing_landmarks <- names(missing_landmarks)[lapply(missing_landmarks, length) > 0]
+
+specimens_missing_landmarks <- names(missing_landmarks)[lapply(missing_landmarks, length) > 0] # Get names of elements with length > 0
 
 # Read in csv file of specimens
 
@@ -156,12 +164,16 @@ species2 <-gsub("_CJB.*","",speciesV2) # make a separate species vector part 2
 
 estimated_landmarks <- estimate.missing(raw_data2, method = c("TPS")) # need to estimate missing values before GPA       
 
+estimated_landmarks2 <- fixLMtps(raw_data2, comp = 10)
 
 ### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens______________________________________________________________
 
-GPA_landmarks2 <- gpagen(estimated_landmarks) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
+GPA_landmarksTPS <- gpagen(estimated_landmarks) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
 
-plot(GPA_landmarks2) # a bit messy but that's expected
+GPA_landmarks2WNN <- gpagen(estimated_landmarks2$out) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
+
+plot(GPA_landmarksTPS) # a bit messy but that's expected
+plot(GPA_landmarks2WNN) # a bit messy but that's expected
 
 
 ### SUBSET TPS TO GENERATE DATASET INCLUDING ONLY SPECIMENS WITH ESTIMATED LANDMARKS______________________________________________________________
@@ -268,7 +280,7 @@ Est_PC_scores <- as.data.frame(Est_PCA)
 Est_PC_scores <- cbind(Est_PC_scores, genus=GMM_data_s$genus, est = as.factor("TRUE"))
 
 All_PC_scores <- rbind(PC_scores, Est_PC_scores) # create a new dataframe with the original PC scores and the PC scores the estimated specimens
-
+specimen3 <-c(specimen,specimen_s)
 # PLOT PCA #
 speciescolors <- c("#666600", "#C9D42D" ,"#42CEBC" ,"#F2AB1F" ,"#864ED0" ,"#261ACE", "#086AFD", "#08FD6A", "#0C8B3F", "#E50CF5", "#FF5E00","#FF0000", "#FF6A6A", "#D5930F", "#9E1616")
 speciesshapes <- c(rep(16,16), rep(20,30))
@@ -280,12 +292,13 @@ p2<-ggplot(All_PC_scores,aes(x=PC1,y=PC2,color=genus, shape = est)) +
   geom_point(size =3)+ xlab(percentage[1]) + ylab(percentage[2]) +
   #scale_color_manual(name = "Species", breaks=levels(All_PC_scores$genus),  values=c(speciescolors, "black", "black", "black", "black", "black")) +
   #scale_shape_manual(values = c(speciesshapes), guide = 'none') + 
-  theme_classic()
+  theme_classic() + 
+  geom_text(label=(specimen3), nudge_x = 0.0, nudge_y = 0.0, check_overlap = F)
 p2
 
 
 #### Linear Discriminant Analysis (LDA) ####________________________________________________________________________
-
+library(MASS)
 # Run LDA Analysis
 Scelop.lda<-lda(PC_scores[,1:14], grouping = genus,CV=F) #Performs LDA
 
@@ -300,8 +313,10 @@ Est.scores<-Test.pred$x
 table(Est_PC_scores$genus, Test.pred$class)
 
 
+
 # Classifying Unknown Specimens in CVA ####________________________________________________________________________
- 
+?typprobClass
+
 CVAProb<-typprobClass(Est_PC_scores[,1:14], PC_scores[,1:14], groups = as.factor(PC_scores$genus),small = T, method = "wilson", cova = T, outlier = 0.001, cv =T)
 CVAProb$probsCV
 CVAProb$groupaffin
