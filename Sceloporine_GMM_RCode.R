@@ -1,6 +1,6 @@
 ### Geometric Morphometrics of Maxilla ###---------------------------------
 
-# Read in landmark tps file__________________________________________________________________________ 
+# Read in landmark tps file---------------------------------
 library(curl)
 library(geomorph)
 f <- curl("https://raw.githubusercontent.com/rangerjohn99/Sceloporine-GMM-Repo/main/Maxilla%20Lateral/TPS%20Files/Sceloporine%20Maxilla%20Landmarks%20No%20Missing%20LM.tps")
@@ -8,7 +8,7 @@ raw_data <- readland.tps(f, specID = c("imageID")) # the function "readland.tps"
 plot(raw_data)
 head(raw_data)
 
-# Read in csv file of specimens__________________________________________________________________________ 
+# Read in csv file of specimens---------------------------------
 f2 <- curl("https://raw.githubusercontent.com/rangerjohn99/Sceloporine-GMM-Repo/main/Maxilla%20Lateral/TPS%20Files/Sceloporine%20Maxilla%20Specimens%20No%20Missing%20LM.CSV")
 specimenList <- read.csv(f2, header = FALSE, sep = ",", stringsAsFactors = TRUE) # this is a matrix of each specimen  
 head(specimenList)
@@ -22,21 +22,20 @@ species <-gsub("_CJB.*","",speciesV1) # make a separate species vector part 2
 
 
 
-### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens__________________________________________________________________________ 
+### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens---------------------------------
 
 GPA_landmarks <- gpagen(raw_data) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
 plot(GPA_landmarks)
 
 
 
-## CREATE GMM DATAFRAMES__________________________________________________________________________ 
+## CREATE GMM DATAFRAMES---------------------------------
 
 GMM_data <-geomorph.data.frame(coords=GPA_landmarks$coords,
                                size=GPA_landmarks$Csize, species=species, genus=genus, specimen = specimen)
 
 
-## PRINCIPAL COMPONENT ANALYSIS ##__________________________________________________________________________ 
-
+## PRINCIPAL COMPONENT ANALYSIS ##---------------------------------
 GMM_data$coords <- two.d.array(GMM_data$coords) #get the data in XY format for PCA
 
 Sceloporine_PCA <- prcomp(GMM_data$coords) #PC analysis
@@ -46,13 +45,13 @@ summary(Sceloporine_PCA2)
 plot(Sceloporine_PCA2, main = "PCA", col=as.numeric(as.factor(genus)), cex = 1.5, cex.lab = 1.5, font.lab = 2)
 text(Sceloporine_PCA2$x, as.character(as.factor(genus)),col=as.numeric(as.factor(genus)), cex=.7)
 
-## VIEW SHAPES ON PRINCIPAL COMPONENTS ##__________________________________________________________________________ 
+## VIEW SHAPES ON PRINCIPAL COMPONENTS ##_---------------------------------
 scallinks <- matrix(c(1,rep(2:11, each=2),1), nrow=11, byrow=TRUE) #link landmarks
 plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp1$min, Sceloporine_PCA2$shapes$shapes.comp1$max, method = "points", mag = 1, links = scallinks) #shapes corresponding to PC1 min and max; grey=min 
 plotRefToTarget(Sceloporine_PCA2$shapes$shapes.comp2$min, Sceloporine_PCA2$shapes$shapes.comp2$max, method = "points", mag = 1, links = scallinks) #shapes corresponding to PC2 min and max; grey=min
 
 
-# PLOT PCA #__________________________________________________________________________ 
+# PLOT PCA #---------------------------------
 
 PC_scores <- as.data.frame(Sceloporine_PCA$x)
 PC_scores <- cbind(PC_scores, genus= GMM_data$genus, est = as.factor("FALSE"))
@@ -71,7 +70,7 @@ plot3d(PC_scores[,1:3])#interactive 3D plots
 text3d(PC_scores[,1:3],texts=(PC_scores$genus),pos=4,cex=.5)
 
 
-# Calculating Mean Shapes for Genera  
+# Calculating Mean Shapes for Genera  ---------------------------------
 Sceloporus_mshape <- mshape(GPA_landmarks$coords[,,1:17])
 Urosaurus_mshape <- mshape(GPA_landmarks$coords[,,18:22])
 Uta_mshape <- mshape(GPA_landmarks$coords[,,23:34])
@@ -81,7 +80,7 @@ plotRefToTarget(Sceloporus_mshape, Urosaurus_mshape, method = "points", mag = 1,
 plotRefToTarget(Sceloporus_mshape, Uta_mshape, method = "points", mag = 1, links = scallinks) #shapes corresponding to PC2 min and max; grey=Sceloporus
 
 
-#### Canonical Variate Analysis ####__________________________________________________________________________ 
+#### Canonical Variate Analysis ####---------------------------------
 
 library(Morpho)
 
@@ -97,7 +96,7 @@ print(typprobs)
 # Mahalanobis distance probabilities
 cva.1$Dist$probsMaha
 
-# Visualize a shape change from score -5 to 5 for CV1/CV2______________________________________________________________
+# Visualize a shape change from score -5 to 5 for CV1/CV2---------------------------------
 cvall <- cva.1
 proc<-procSym(GPA_landmarks$coords)
 cvvis5 <- 5*cvall$CVvis[,1]+cvall$Grandm
@@ -116,7 +115,7 @@ deformGrid2d(cvvis5_2,cvvisNeg5_2,ngrid = 0, wireframe = 1:11,col1 = 1, col2 = 2
 CVA2p<-cvvis5_2
 CVA2n<-cvvisNeg5_2
 
-### RANDOM FOREST CLASSIFICATION ###:Non-parametric
+### RANDOM FOREST CLASSIFICATION ###:Non-parametric---------------------------------
 PC_scores_rf <- data.frame(Sceloporine_PCA$x[,1:5], genus= as.factor(genus))
 library(randomForest)
 set.seed(123)
@@ -127,7 +126,7 @@ rf_acc <- 1-rf_acc[,4] # percent correct classification
 rf_acc
 
 
-## Missing landmarks dataset ##______________________________________________________________
+## Missing landmarks dataset ##---------------------------------
 
 # Read in landmark tps file
 
@@ -160,13 +159,13 @@ species2 <-gsub("_CJB.*","",speciesV2) # make a separate species vector part 2
 
 
 
-### ESTIMATE LOCATION OF MISSING LANDMARKS______________________________________________________________
+### ESTIMATE LOCATION OF MISSING LANDMARKS---------------------------------
 
 estimated_landmarks <- estimate.missing(raw_data2, method = c("TPS")) # need to estimate missing values before GPA       
 
 estimated_landmarks2 <- fixLMtps(raw_data2, comp = 10)
 
-### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens______________________________________________________________
+### GENERALIZED PROCRUSTES ANALYSIS ### alligns all the landmarks of all specimens---------------------------------
 
 GPA_landmarksTPS <- gpagen(estimated_landmarks) # performs Generalized Procrustes analysis of landmarks and creates aligned Procrustes coordinates
 
@@ -269,8 +268,7 @@ GMM_data2 <-geomorph.data.frame(coords=GMM_data_s$land,
 GMM_data2$coords <- two.d.array(GMM_data2$coords) #get the data in XY format for PCA
 
 
-## PRINCIPAL COMPONENT ANALYSIS ##______________________________________________________________
-
+## PRINCIPAL COMPONENT ANALYSIS ##---------------------------------
 # PROJECT ESTIMATED DATA #
 dimnames(GMM_data$coords) <- NULL
 Sceloporine_PCA <- prcomp(GMM_data$coords) #PC analysis
@@ -297,7 +295,7 @@ p2<-ggplot(All_PC_scores,aes(x=PC1,y=PC2,color=genus, shape = est)) +
 p2
 
 
-#### Linear Discriminant Analysis (LDA) ####________________________________________________________________________
+#### Linear Discriminant Analysis (LDA) ####---------------------------------
 library(MASS)
 # Run LDA Analysis
 Scelop.lda<-lda(PC_scores[,1:14], grouping = genus,CV=F) #Performs LDA
@@ -314,7 +312,7 @@ table(Est_PC_scores$genus, Test.pred$class)
 
 
 
-# Classifying Unknown Specimens in CVA ####________________________________________________________________________
+# Classifying Unknown Specimens in CVA ####---------------------------------
 ?typprobClass
 
 CVAProb<-typprobClass(Est_PC_scores[,1:14], PC_scores[,1:14], groups = as.factor(PC_scores$genus),small = T, method = "wilson", cova = T, outlier = 0.001, cv =F)
@@ -329,6 +327,14 @@ table(Est_PC_scores$genus, CVAProb$groupaffin)
 
 
 #+ predict group assignment based on KNN & RF?
+---------------------------------
+
+
+
+
+
+
+
 
 
 
