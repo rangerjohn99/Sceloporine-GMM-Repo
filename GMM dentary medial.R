@@ -11,7 +11,7 @@ head(raw_data)
 
 ff <- curl("https://raw.githubusercontent.com/rangerjohn99/Sceloporine-GMM-Repo/main/Dentary%20Medial/TPS%20files/Sceloporine%20Dentary%20Medial%20TPS%20Images%20Semilandmarks%20With%20Landmarked%20Curves%20Overlapped%20Deleted%20Sliders%20File.NTS")
 sliders <- readland.nts(ff)
-sliders<- two.d.array(sliders)
+sliders <- as.data.frame(sliders)
 
 data.super <- gpagen(raw_data, curves = sliders, ProcD = FALSE, PrinAxes = FALSE) 
 plot(data.super)
